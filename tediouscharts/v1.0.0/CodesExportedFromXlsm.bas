@@ -148,10 +148,10 @@ Sub ReplaceTextInIndices(targetChart As ChartObject, wsInfo As Worksheet, chartT
         With targetChart.Chart
             If ChartHasShape(targetChart.Chart, TextboxName) Then
                 With .Shapes(TextboxName).OLEFormat.Object
-                    originalText = .text
+                    originalText = .Text
                     If InStr(originalText, tOrg) > 0 Then
                         newText = Replace(originalText, tOrg, tNew)
-                        .text = newText
+                        .Text = newText
                     End If
                 End With
             End If
@@ -181,13 +181,14 @@ Sub ApplySpecialFormatting(indices As Collection, prefix As String, boxtype As S
         With sampleChart.Chart
             If ChartHasShape(sampleChart.Chart, TextboxName) Then
                 With .Shapes(TextboxName).OLEFormat.Object
-                    sampleText = .text
+                    sampleText = .Text
 
                     ' Find starting and ending positions in the sample text
                     sStartPos = InStr(1, sampleText, formatStart) + Len(formatStart)
                     sEndPos = InStr(sStartPos, sampleText, formatEnd) - 1
-
+                
                     Set origFont = .Characters(sStartPos, sEndPos - sStartPos + 1).Font
+
                 End With
             End If
         End With
@@ -196,12 +197,12 @@ Sub ApplySpecialFormatting(indices As Collection, prefix As String, boxtype As S
         With targetChart.Chart
             If ChartHasShape(targetChart.Chart, TextboxName) Then
                 With .Shapes(TextboxName).OLEFormat.Object
-                    targetText = .text
+                    targetText = .Text
 
                     ' Find starting and ending positions in the target text
                     tStartPos = InStr(1, targetText, formatStart) + Len(formatStart)
                     tEndPos = InStr(tStartPos, targetText, formatEnd) - 1
-
+                    
                     With .Characters(tStartPos, tEndPos - tStartPos + 1).Font
                         .Name = origFont.Name
                         .Size = origFont.Size
@@ -302,20 +303,20 @@ Sub CreateChartsFromTable()
 
             If sampleChart.Chart.HasTitle Then
                 ' Find the position of the newline character in the sample chart's title
-                splitPoint = InStr(sampleChart.Chart.ChartTitle.text, Chr(13))
+                splitPoint = InStr(sampleChart.Chart.ChartTitle.Text, Chr(13))
                
                 ' Capture original formatting
                 Set origMainTitleFont = sampleChart.Chart.ChartTitle.Characters(1, splitPoint - 1).Font
-                Set origSubTitleFont = sampleChart.Chart.ChartTitle.Characters(splitPoint + 1, Len(sampleChart.Chart.ChartTitle.text) - splitPoint).Font
+                Set origSubTitleFont = sampleChart.Chart.ChartTitle.Characters(splitPoint + 1, Len(sampleChart.Chart.ChartTitle.Text) - splitPoint).Font
                
-                targetChart.Chart.ChartTitle.text = Trim(wsInfo.Cells(i, GetColNumber(wsInfo, "maintitle")).Value) & _
+                targetChart.Chart.ChartTitle.Text = Trim(wsInfo.Cells(i, GetColNumber(wsInfo, "maintitle")).Value) & _
                                                     Chr(10) & Trim(wsInfo.Cells(i, GetColNumber(wsInfo, "subtitle")).Value)
                 targetChart.Height = wsInfo.Cells(i, GetColNumber(wsInfo, "height")).Value * 72 ' Assuming height in inches
                 targetChart.Width = wsInfo.Cells(i, GetColNumber(wsInfo, "width")).Value * 72 ' Assuming width in inches
                
            
                 ' Apply captured formatting to the new chart's title
-                With targetChart.Chart.ChartTitle.Characters(1, InStr(1, targetChart.Chart.ChartTitle.text, Chr(10)) - 1).Font
+                With targetChart.Chart.ChartTitle.Characters(1, InStr(1, targetChart.Chart.ChartTitle.Text, Chr(10)) - 1).Font
                     .Name = origMainTitleFont.Name
                     .Size = origMainTitleFont.Size
                     .Color = origMainTitleFont.Color
@@ -323,8 +324,8 @@ Sub CreateChartsFromTable()
                     ' ... [any other attributes you want to capture and apply]
                 End With
                
-                With targetChart.Chart.ChartTitle.Characters(InStr(1, targetChart.Chart.ChartTitle.text, Chr(10)) + 1, _
-                Len(targetChart.Chart.ChartTitle.text) - InStr(1, targetChart.Chart.ChartTitle.text, Chr(10))).Font
+                With targetChart.Chart.ChartTitle.Characters(InStr(1, targetChart.Chart.ChartTitle.Text, Chr(10)) + 1, _
+                Len(targetChart.Chart.ChartTitle.Text) - InStr(1, targetChart.Chart.ChartTitle.Text, Chr(10))).Font
                     .Name = origSubTitleFont.Name
                     .Size = origSubTitleFont.Size
                     .Color = origSubTitleFont.Color
@@ -399,7 +400,7 @@ Sub CreateChartsFromTable()
             ReplaceTextInIndices targetChart, wsInfo, chartType, boxTitleIndices, "boxtitle", "title", i
             
             ApplySpecialFormatting notefIndices, "note", "text", chartType, wsInfo, sampleChart, targetChart, i
-            
+            ApplySpecialFormatting boxTitlefIndices, "boxtitle", "title", chartType, wsInfo, sampleChart, targetChart, i
             
         ' Move to the next column or row for the next chart
         If (i - 1) Mod NumberPerRow = 0 And i > 2 Then ' If reached the max number of charts per row
@@ -414,6 +415,12 @@ Sub CreateChartsFromTable()
     Next i
 
 End Sub
+
+
+
+
+
+
 
 
 
