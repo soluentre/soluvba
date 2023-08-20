@@ -1,0 +1,97 @@
+Sub SearchChartTitlesAndTextBoxesInFolder()
+
+    ' Set the folder path where the Excel files are located
+    folderPath = "C:\...\" ' Replace with your actual folder path, remember to end with "\"
+    
+    ' Specify the path and filename for the results text file
+    resultsFilePath = "C:\...\result.txt" ' Replace with your file path that you want to save the results
+
+    Dim resultsFile As Integer
+    Dim fileName As String
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim chtObj As ChartObject
+    Dim shp As Shape
+    Dim foundCount As Integer
+    Dim outputText As String
+    Dim currentWorkbookName As String
+    Dim currentWorksheetName As String
+    
+    ' Open the results text file for writing
+    resultsFile = FreeFile
+    Open resultsFilePath For Output As #resultsFile
+    
+    ' Disable alerts to suppress prompts about external links
+    Application.AskToUpdateLinks = False
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    
+    ' Loop through each file in the folder
+    fileName = Dir(folderPath & "*.xlsx") ' Change the file extension if needed (e.g., "*.xls")
+    
+    Do While fileName <> ""
+        Set wb = Workbooks.Open(folderPath & fileName)
+        wb.UpdateLinks = xlUpdateLinksNever
+        currentWorkbookName = wb.Name ' Store the current workbook name
+        outputText = Chr(10) & "------------------------------" & Chr(10) & "File: " & currentWorkbookName & Chr(10) & "------------------------------"
+        Print #resultsFile, outputText
+        
+        ' Loop through all worksheets in the workbook
+        For Each ws In wb.Worksheets
+            currentWorksheetName = ws.Name ' Store the current worksheet name
+            outputText = Chr(10) & " >>> Worksheet: " & currentWorksheetName
+            Print #resultsFile, outputText
+            
+            ' Loop through all chart objects in the worksheet
+            For Each chtObj In ws.ChartObjects
+                If chtObj.Chart.HasTitle Then
+                    outputText = "Chart Title: " & chtObj.Chart.ChartTitle.Text
+                    Print #resultsFile, outputText
+                    foundCount = foundCount + 1
+                End If
+                
+            On Error Resume Next ' Ignore errors and proceed to next line
+            For Each shp In chtObj.Chart.Shapes
+                If Err.Number = 0 Then ' Check if no error
+                    If shp.Type = msoTextBox Then
+                        outputText = "Text Box Content: " & shp.TextFrame2.TextRange.Text
+                        Print #resultsFile, outputText
+                        foundCount = foundCount + 1
+                    End If
+                Else
+                    ' Log the error if necessary, or just reset the error
+                    Err.Clear ' Clear the error
+                End If
+            Next shp
+            On Error GoTo 0 ' Restore normal error handling
+            Next chtObj
+            
+            ' Loop through all shapes in the worksheet
+            For Each shp In ws.Shapes
+                If shp.Type = msoTextBox Then
+                    outputText = "Workbook: " & currentWorkbookName & ", Worksheet: " & currentWorksheetName & ", Text Box Content: " & shp.TextFrame2.TextRange.Text
+                    Print #resultsFile, outputText
+                    foundCount = foundCount + 1
+                End If
+            Next shp
+        Next ws
+        
+        wb.Close SaveChanges:=False
+        fileName = Dir
+    Loop
+    
+    ' Enable alerts again
+    Application.AskToUpdateLinks = True
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = True
+    
+    ' Close the results text file
+    Close #resultsFile
+    
+    ' Display a message when the process is done
+    MsgBox "Search process is complete.", vbInformation, "Process Complete"
+
+End Sub
+
+
+
